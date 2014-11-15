@@ -8,16 +8,16 @@ Based on [waitingkuo/docker-meteor](https://github.com/waitingkuo/docker-meteor)
 
 ## Setup
 
-Download the latest boot2docker installer for mac [here](https://github.com/boot2docker/boot2docker/releases)
+Download the latest boot2docker installer for mac [here](https://github.com/boot2docker/boot2docker/releases).
   
-Setup port forwarding for port 80
+Setup port forwarding for port 80:
 
     $ boot2docker stop
     $ VBoxManage modifyvm "boot2docker-vm" --natpf1 "tcp-port80,tcp,,80,,80";
     $ boot2docker start
 
 
-Clone this repo and add the location to your PATH
+Clone this repo and add the location to your PATH.
 
 
 ## Example
