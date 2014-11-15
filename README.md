@@ -1,15 +1,24 @@
 docker-meteor
 =============
 
-A deploy tool for meteor based on docker 
+Run your meteor app in a docker container using boot2docker.
 
-## Usage
+Based on [waitingkuo/docker-meteor](https://github.com/waitingkuo/docker-meteor)
 
-  `deploy` is a tool to deploy the bundle of a meteor app to any host which has installed docker
 
-  `stop` is a tool to terminate the meteor server 
+## Setup
+
+Download the latest boot2docker installer for mac [here]()
+  
+Setup port forwarding for port 80
+
+
 
 ## Example
+
+  # download 
+
+
 
     # init test environment
     vagrant up
