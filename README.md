@@ -36,5 +36,5 @@ Clone this repo and add the location to your PATH
 
 
     # check app 
-    curl `boot2docker ip` 
+    $ curl `boot2docker ip` 
 
