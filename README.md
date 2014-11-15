@@ -29,7 +29,7 @@ Clone this repo and add the location to your PATH
     # deploy locally using boot2docker
     $ deploy.sh test bundle.tar.gz
 
-    # check whether if your container is running
+    # check if your container is running
     $ docker ps
     CONTAINER ID        IMAGE               COMMAND                CREATED             STATUS              PORTS                NAMES
     3b0f0392ee0d        test:latest         "/bin/sh -c 'node bu   5 hours ago         Up 15 seconds       0.0.0.0:80->80/tcp   compassionate_ritchie   
