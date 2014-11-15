@@ -3,7 +3,7 @@ docker-meteor
 
 Run your meteor app in a docker container using boot2docker.
 
-Based on [waitingkuo/docker-meteor](https://github.com/waitingkuo/docker-meteor)
+Based on [waitingkuo/docker-meteor](https://github.com/waitingkuo/docker-meteor).
 
 
 ## Setup
