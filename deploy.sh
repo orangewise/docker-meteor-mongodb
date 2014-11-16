@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-# check number of arguments, store the values
-[ ${BASH_ARGC} -ne 2 ] && { echo "[usage] ./deploy APP_NAME BUNDLE_FILE"; exit 1; }
+# check number of arguments (default to 0), store the values
+[ ${BASH_ARGC-0} -ne 2 ] && { echo "[usage] ./deploy.sh APP_NAME BUNDLE_FILE"; exit 1; }
 APP_NAME=${BASH_ARGV[1]}
 BUNDLE_FILE=${BASH_ARGV[0]}
 
@@ -14,6 +14,7 @@ HOST=`echo docker@${IP}`
 
 
 # Setup boot2docker environment
+boot2docker shellinit
 cat ~/.ssh/id_dsa.pub | ssh $HOST 'cat >> .ssh/authorized_keys'
 
 
