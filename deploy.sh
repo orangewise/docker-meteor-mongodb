@@ -43,7 +43,7 @@ ENV PORT 80
 CMD node bundle/main.js
 "
 
-echo copy ${BUNDLE_FILE} to boot2docker ${HOST}
+echo copy bundle to boot2docker: scp ${BUNDLE_FILE} ${HOST}:~/bundle.tar.gz
 scp ${BUNDLE_FILE} ${HOST}:~/bundle.tar.gz
 echo "${DOCKERFILE}" | ssh ${HOST} "cat - > Dockerfile"
 
