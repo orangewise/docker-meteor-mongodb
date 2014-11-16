@@ -14,7 +14,7 @@ HOST=`echo docker@${IP}`
 
 
 # Setup boot2docker environment
-boot2docker shellinit
+$(boot2docker shellinit)
 cat ~/.ssh/id_dsa.pub | ssh $HOST 'cat >> .ssh/authorized_keys'
 
 
