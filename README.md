@@ -27,7 +27,7 @@ Clone this repo and add the location to your PATH.
     $ meteor build .
 
     # deploy locally using boot2docker
-    $ deploy.sh test bundle.tar.gz
+    $ deploy test bundle.tar.gz
 
     # check if your container is running
     $ docker ps
