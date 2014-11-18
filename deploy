@@ -40,6 +40,7 @@ RUN cd bundle/programs/server && npm install
 
 # set meteor environment
 #ENV MONGO_URL='mongodb://user:password@host:port/databasename'
+ENV MONGO_URL mongodb://${IP}:27017
 ENV ROOT_URL http://${IP}
 ENV PORT 80
 #ENV MAIL_URL='smtp://user:password@mailhost:port/'
