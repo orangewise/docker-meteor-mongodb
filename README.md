@@ -24,7 +24,7 @@ Clone this repo and add the location to your PATH.
 
 
     # bundle your app
-    $ meteor build .
+    $ meteor build . --architecture os.linux.x86_64
 
     # deploy locally using boot2docker
     $ deploy test bundle.tar.gz
