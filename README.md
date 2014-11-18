@@ -22,14 +22,28 @@ Setup port forwarding for port 80:
 Clone this repo and add the location to your PATH.
 
 
-## Example
-
+## Build your meteor bundle 
 
     # bundle your app for linux
     $ meteor build . --architecture os.linux.x86_64
 
+## deploy.yml
+
+Create a deploy.yml file in the same folder as your meteor bundle. It should looks like this:
+
+    db:
+      name: mongodb
+      container: robodo/mongodb:latest
+  
+    app:
+      name: test
+      bundle: microscope.tar.gz
+
+
+## Example
+
     # deploy locally using boot2docker
-    $ deploy test bundle.tar.gz
+    $ deploy
 
     # check if your containers are running
     $ docker ps

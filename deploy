@@ -1,10 +1,31 @@
 #!/bin/bash
 
+function parse_yaml {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
 
-# check number of arguments (default to 0), store the values
-[ ${BASH_ARGC-0} -ne 2 ] && { echo "[usage] ./deploy.sh APP_NAME BUNDLE_FILE"; exit 1; }
-APP_NAME=${BASH_ARGV[1]}
-BUNDLE_FILE=${BASH_ARGV[0]}
+eval $(parse_yaml deploy.yml)
+
+echo + deploy.yml ++++++++++
+echo ${db_name}
+echo ${db_container}
+echo ${app_name}
+echo ${app_bundle}
+echo +++++++++++++++++++++++
+
 
 
 # check if boo2docker is running
@@ -13,19 +34,19 @@ IP=`boot2docker ip`
 HOST=`echo docker@${IP}`
 
 # check if mongodb container is running
-if [ -z "$(docker ps | awk '{print $1 $2}' | grep robodo/mongodb:latest | cut -c 1-3)" ]; then
-  echo Container robodo/mongodb is not running start it up first.
-  echo [create the container, or] docker run --name mongodb -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db robodo/mongodb /usr/bin/mongod --smallfiles
-  echo [run cached container] docker start mongodb
+if [ -z "$(docker ps | awk '{print $1 $2}' | grep ${db_container} | cut -c 1-3)" ]; then
+  echo Container ${db_container} is not running start it up first.
+  echo [create the container] docker run --name ${db_name} -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db ${db_container} /usr/bin/mongod --smallfiles
+  echo or
+  echo [run cached container] docker start ${db_name}
   exit;
-  # docker stop $(docker ps | awk '{print $1 $2}' | grep test:latest | cut -c 1-3);
 fi
 
 
 # stop old container
 if [ -n "$(docker ps | awk '{print $1 $2}' | grep test:latest | cut -c 1-3)" ]; then
   echo Container is already running, stopt it first
-  docker stop $(docker ps | awk '{print $1 $2}' | grep ${APP_NAME}:latest | cut -c 1-3);
+  docker stop $(docker ps | awk '{print $1 $2}' | grep ${app_name}:latest | cut -c 1-3);
 fi
 
 # Setup boot2docker environment
@@ -51,8 +72,8 @@ RUN cd bundle/programs/server && npm install
 # set meteor environment
 # mongodb is the name of the mongodb container, we can link to this container from our meteor app container. 
 # start mongodb container like this:
-# $ docker run --name mongodb -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db robodo/mongodb /usr/bin/mongod --smallfiles
-ENV MONGO_URL mongodb://mongodb:27017
+# $ docker run --name ${db_name} -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db ${db_container} /usr/bin/mongod --smallfiles
+ENV MONGO_URL mongodb://${db_name}:27017
 ENV ROOT_URL http://${IP}
 ENV PORT 80
 #ENV MAIL_URL='smtp://user:password@mailhost:port/'
@@ -61,12 +82,12 @@ ENV PORT 80
 CMD node bundle/main.js
 "
 
-echo copy bundle to boot2docker: scp ${BUNDLE_FILE} ${HOST}:~/bundle.tar.gz
-scp ${BUNDLE_FILE} ${HOST}:~/bundle.tar.gz
+echo copy bundle to boot2docker: scp ${app_bundle} ${HOST}:~/bundle.tar.gz
+scp ${app_bundle} ${HOST}:~/bundle.tar.gz
 echo "${DOCKERFILE}" | ssh ${HOST} "cat - > Dockerfile"
 
-echo build docker image with name ${APP_NAME} using Dockerfile
-ssh ${HOST} sudo docker build -t ${APP_NAME} .
+echo build docker image with name ${app_name} using Dockerfile
+ssh ${HOST} sudo docker build -t ${app_name} .
 
 echo run docker image with name ${APP_NAME}
-ssh ${HOST} sudo docker run -d -p 80:80  --link mongodb:mongodb ${APP_NAME} 
+ssh ${HOST} sudo docker run -d -p 80:80  --link ${db_name}:${db_name} ${app_name} 
