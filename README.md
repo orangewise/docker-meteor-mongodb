@@ -3,6 +3,8 @@ docker-meteor
 
 Run your meteor app in a docker container using boot2docker.
 
+Your app connects to mongodb that also runs in a linked docker container. 
+
 Based on [waitingkuo/docker-meteor](https://github.com/waitingkuo/docker-meteor).
 
 
@@ -23,16 +25,17 @@ Clone this repo and add the location to your PATH.
 ## Example
 
 
-    # bundle your app
+    # bundle your app for linux
     $ meteor build . --architecture os.linux.x86_64
 
     # deploy locally using boot2docker
     $ deploy test bundle.tar.gz
 
-    # check if your container is running
+    # check if your containers are running
     $ docker ps
-    CONTAINER ID        IMAGE               COMMAND                CREATED             STATUS              PORTS                NAMES
-    3b0f0392ee0d        test:latest         "/bin/sh -c 'node bu   5 hours ago         Up 15 seconds       0.0.0.0:80->80/tcp   compassionate_ritchie   
+    CONTAINER ID        IMAGE                   COMMAND                CREATED             STATUS              PORTS                        NAMES
+    08f4cc850485        test:latest             "/bin/sh -c 'node bu   23 minutes ago      Up 2 minutes        0.0.0.0:80->80/tcp           condescending_mccarthy   
+    9b80b8966d2a        robodo/mongodb:latest   "/bin/sh -c usr/bin/   50 minutes ago      Up 3 minutes        127.0.0.1:27017->27017/tcp   mongodb                  
 
 
     # check app 
