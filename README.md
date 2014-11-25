@@ -22,11 +22,6 @@ Setup port forwarding for port 80:
 Clone this repo and add the location to your PATH.
 
 
-## Build your meteor bundle 
-
-    # bundle your app for linux
-    $ meteor build . --architecture os.linux.x86_64
-
 ## deploy.yml
 
 Create a deploy.yml file in the same folder as your meteor bundle. It should looks like this:
@@ -43,7 +38,7 @@ Create a deploy.yml file in the same folder as your meteor bundle. It should loo
 ## Example
 
     # deploy locally using boot2docker
-    $ deploy
+    $ deploy local
 
     # check if your containers are running
     $ docker ps

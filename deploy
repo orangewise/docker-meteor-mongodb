@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 function parse_yaml {
    local prefix=$2
    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
@@ -17,77 +18,100 @@ function parse_yaml {
    }'
 }
 
-eval $(parse_yaml deploy.yml)
 
-echo + deploy.yml ++++++++++
-echo ${db_name}
-echo ${db_container}
-echo ${app_name}
-echo ${app_bundle}
-echo +++++++++++++++++++++++
+function deploy_local {
+  eval $(parse_yaml deploy.yml)
 
-
-
-# check if boo2docker is running
-IP=`boot2docker ip`
-[ -z "$IP" ] && { echo "boot2docker is not running, start it with: boot2docker start"; exit 1; }
-HOST=`echo docker@${IP}`
-
-# check if mongodb container is running
-if [ -z "$(docker ps | awk '{print $1 $2}' | grep ${db_container} | cut -c 1-3)" ]; then
-  echo Container ${db_container} is not running start it up first.
-  echo [create the container] docker run --name ${db_name} -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db ${db_container} /usr/bin/mongod --smallfiles
-  echo or
-  echo [run cached container] docker start ${db_name}
-  exit;
-fi
+  echo ++ deploy.yml ++++++++++
+  [ -z "${db_name}" ] && { echo "[error] db:name: not set in deploy.yml"; exit 1; }; echo db:name: ${db_name}
+  [ -z "${db_container}" ] && { echo "[error] db:container: not set in deploy.yml"; exit 1; }; echo db:container: ${db_container}
+  [ -z "${app_name}" ] && { echo "[error] app:name: not set in deploy.yml"; exit 1; }; echo app:name: ${app_name}
+  [ -z "${app_bundle}" ] && { echo "[error] app:bundle: not set in deploy.yml"; exit 1; }; echo app:bundle: ${app_bundle}
+  echo +++++++++++++++++++++++
 
 
-# stop old container
-if [ -n "$(docker ps | awk '{print $1 $2}' | grep test:latest | cut -c 1-3)" ]; then
-  echo Container is already running, stopt it first
-  docker stop $(docker ps | awk '{print $1 $2}' | grep ${app_name}:latest | cut -c 1-3);
-fi
-
-# Setup boot2docker environment
-$(boot2docker shellinit)
-cat ~/.ssh/id_dsa.pub | ssh $HOST 'cat >> .ssh/authorized_keys'
+  echo Package this project up for deployment
+  meteor build . --architecture os.linux.x86_64
+ 
 
 
-# create Dockerfile template 
-DOCKERFILE="
-FROM node
-MAINTAINER @robodo
+  # check if boo2docker is running
+  IP=`boot2docker ip`
+  [ -z "$IP" ] && { echo "[error] boot2docker is not running, start it with: boot2docker start"; exit 1; }
+  HOST=`echo docker@${IP}`
 
-# install meteor
-RUN curl https://install.meteor.com | /bin/sh
+  # check if mongodb container is running
+  if [ -z "$(docker ps | awk '{print $1 $2}' | grep ${db_container} | cut -c 1-3)" ]; then
+    echo Container ${db_container} is not running start it up first.
+    echo [create the container] docker run --name ${db_name} -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db ${db_container} /usr/bin/mongod --smallfiles
+    echo or
+    echo [run cached container] docker start ${db_name}
+    exit;
+  fi
 
-ADD . ./meteorsrc
-WORKDIR /meteorsrc
 
-# extract archive
-RUN tar -zxf bundle.tar.gz
-RUN cd bundle/programs/server && npm install
+  # stop old container
+  if [ -n "$(docker ps | awk '{print $1 $2}' | grep test:latest | cut -c 1-3)" ]; then
+    echo Container is already running, stopt it first
+    docker stop $(docker ps | awk '{print $1 $2}' | grep ${app_name}:latest | cut -c 1-3);
+  fi
 
-# set meteor environment
-# mongodb is the name of the mongodb container, we can link to this container from our meteor app container. 
-# start mongodb container like this:
-# $ docker run --name ${db_name} -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db ${db_container} /usr/bin/mongod --smallfiles
-ENV MONGO_URL mongodb://${db_name}:27017
-ENV ROOT_URL http://${IP}
-ENV PORT 80
-#ENV MAIL_URL='smtp://user:password@mailhost:port/'
+  # Setup boot2docker environment
+  $(boot2docker shellinit)
+  cat ~/.ssh/id_dsa.pub | ssh $HOST 'cat >> .ssh/authorized_keys'
 
-# run the app
-CMD node bundle/main.js
-"
 
-echo copy bundle to boot2docker: scp ${app_bundle} ${HOST}:~/bundle.tar.gz
-scp ${app_bundle} ${HOST}:~/bundle.tar.gz
-echo "${DOCKERFILE}" | ssh ${HOST} "cat - > Dockerfile"
+  # create Dockerfile template 
+  DOCKERFILE="
+  FROM node
+  MAINTAINER @robodo
 
-echo build docker image with name ${app_name} using Dockerfile
-ssh ${HOST} sudo docker build -t ${app_name} .
+  # install meteor
+  RUN curl https://install.meteor.com | /bin/sh
 
-echo run docker image with name ${APP_NAME}
-ssh ${HOST} sudo docker run -d -p 80:80  --link ${db_name}:${db_name} ${app_name} 
+  ADD . ./meteorsrc
+  WORKDIR /meteorsrc
+
+  # extract archive
+  RUN tar -zxf bundle.tar.gz
+  RUN cd bundle/programs/server && npm install
+
+  # set meteor environment
+  # mongodb is the name of the mongodb container, we can link to this container from our meteor app container. 
+  # start mongodb container like this:
+  # $ docker run --name ${db_name} -d -p 127.0.0.1:27017:27017 -v /mnt/sda1/data/mongo/db:/data/db ${db_container} /usr/bin/mongod --smallfiles
+  ENV MONGO_URL mongodb://${db_name}:27017
+  ENV ROOT_URL http://${IP}
+  ENV PORT 80
+  #ENV MAIL_URL='smtp://user:password@mailhost:port/'
+
+  # run the app
+  CMD node bundle/main.js
+  "
+
+  echo copy bundle to boot2docker: scp ${app_bundle} ${HOST}:~/bundle.tar.gz
+  scp ${app_bundle} ${HOST}:~/bundle.tar.gz
+  echo "${DOCKERFILE}" | ssh ${HOST} "cat - > Dockerfile"
+
+  echo build docker image with name ${app_name} using Dockerfile
+  ssh ${HOST} sudo docker build -t ${app_name} .
+
+  echo run docker image with name ${APP_NAME}
+  ssh ${HOST} sudo docker run -d -p 80:80  --link ${db_name}:${db_name} ${app_name} 
+}
+
+
+
+case $1 in
+   
+    local)
+      deploy_local
+      ;;
+      
+    *)
+      echo "[usage] deploy [local]"
+      exit 1
+esac
+
+
+
